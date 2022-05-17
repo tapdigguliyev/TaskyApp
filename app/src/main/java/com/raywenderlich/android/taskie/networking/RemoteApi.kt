@@ -64,7 +64,11 @@ class RemoteApi {
           connection.doOutput = true
           connection.doInput = true
 
-          val body = "{\"email\":\"${userDataRequest.email}\", \"password\":\"${userDataRequest.password}\"}"
+          val requestJson = JSONObject()
+          requestJson.put("email", userDataRequest.email)
+          requestJson.put("password", userDataRequest.password)
+          val body = requestJson.toString()
+
           val bytes = body.toByteArray()
 
           try {
@@ -107,8 +111,12 @@ class RemoteApi {
         connection.doOutput = true
         connection.doInput = true
 
-        val body = "{\"name\":\"${userDataRequest.name}\", \"email\":\"${userDataRequest.email}\"," +
-                "\"password\":\"${userDataRequest.password}\"}"
+        val requestJson = JSONObject()
+        requestJson.put("name", userDataRequest.name)
+        requestJson.put("email", userDataRequest.email)
+        requestJson.put("password", userDataRequest.password)
+        val body = requestJson.toString()
+
         val bytes = body.toByteArray()
 
         try {
@@ -126,7 +134,9 @@ class RemoteApi {
                         response.append(it.trim())
                     }
                 }
-                onUserCreated(response.toString(), null)
+
+                val jsonObject = JSONObject(response.toString())
+                onUserCreated(jsonObject.getString("message"), null)
             }
 
         } catch (error: Throwable) {
