@@ -38,6 +38,7 @@ import com.raywenderlich.android.taskie.model.Task
 import com.raywenderlich.android.taskie.model.UserProfile
 import com.raywenderlich.android.taskie.model.request.AddTaskRequest
 import com.raywenderlich.android.taskie.model.request.UserDataRequest
+import org.json.JSONObject
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.lang.StringBuilder
@@ -53,7 +54,46 @@ const val BASE_URL = "https://taskie-rw.herokuapp.com"
 class RemoteApi {
 
   fun loginUser(userDataRequest: UserDataRequest, onUserLoggedIn: (String?, Throwable?) -> Unit) {
-    onUserLoggedIn("token", null)
+      Thread(Runnable {
+          val connection = URL("$BASE_URL/api/login").openConnection() as HttpURLConnection
+          connection.requestMethod = "POST"
+          connection.setRequestProperty("Content-Type", "application/json")
+          connection.setRequestProperty("Accept", "application/json")
+          connection.readTimeout = 10000
+          connection.connectTimeout = 10000
+          connection.doOutput = true
+          connection.doInput = true
+
+          val body = "{\"email\":\"${userDataRequest.email}\", \"password\":\"${userDataRequest.password}\"}"
+          val bytes = body.toByteArray()
+
+          try {
+              connection.outputStream.use { outputStream ->
+                  outputStream.write(bytes)
+              }
+
+              val reader = InputStreamReader(connection.inputStream)
+              reader.use { input ->
+                  val response = StringBuilder()
+                  val bufferedReader = BufferedReader(input)
+
+                  bufferedReader.useLines { lines ->
+                      lines.forEach {
+                          response.append(it.trim())
+                      }
+                  }
+                  val jsonObject = JSONObject(response.toString())
+                  val token = jsonObject.getString("token")
+
+                  onUserLoggedIn(token, null)
+              }
+
+          } catch (error: Throwable) {
+            onUserLoggedIn(null, error)
+          }
+
+          connection.disconnect()
+      }).start()
   }
 
   fun registerUser(userDataRequest: UserDataRequest, onUserCreated: (String?, Throwable?) -> Unit) {
