@@ -41,9 +41,16 @@ import com.raywenderlich.android.taskie.model.UserProfile
 import com.raywenderlich.android.taskie.model.request.AddTaskRequest
 import com.raywenderlich.android.taskie.model.request.UserDataRequest
 import com.raywenderlich.android.taskie.model.response.GetTasksResponse
+import okhttp3.MediaType
+import okhttp3.RequestBody
+import okhttp3.ResponseBody
 import org.json.JSONObject
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 import java.io.BufferedReader
 import java.io.InputStreamReader
+import java.lang.NullPointerException
 import java.lang.StringBuilder
 import java.net.HttpURLConnection
 import java.net.URL
@@ -103,46 +110,24 @@ class RemoteApi(private val remoteApiService: RemoteApiService) {
   }
 
   fun registerUser(userDataRequest: UserDataRequest, onUserCreated: (String?, Throwable?) -> Unit) {
-    Thread(Runnable {
-        val connection = URL("$BASE_URL/api/register").openConnection() as HttpURLConnection
-        connection.requestMethod = "POST"
-        connection.setRequestProperty("Content-Type", "application/json")
-        connection.setRequestProperty("Accept", "application/json")
-        connection.readTimeout = 10000
-        connection.connectTimeout = 10000
-        connection.doOutput = true
-        connection.doInput = true
-
-        val body = gson.toJson(userDataRequest)
-
-        val bytes = body.toByteArray()
-
-        try {
-            connection.outputStream.use { outputStream ->
-                outputStream.write(bytes)
+    val body = RequestBody.create(
+        MediaType.parse("application/json"), gson.toJson(userDataRequest)
+    )
+    remoteApiService.registerUser(body).enqueue(object : Callback<ResponseBody> {
+        override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
+            val message = response.body()?.string()
+            if (message == null) {
+                onUserCreated(null, NullPointerException("No response body!"))
+                return
             }
 
-            val reader = InputStreamReader(connection.inputStream)
-            reader.use { input ->
-                val response = StringBuilder()
-                val bufferedReader = BufferedReader(input)
-
-                bufferedReader.useLines { lines ->
-                    lines.forEach {
-                        response.append(it.trim())
-                    }
-                }
-
-                val jsonObject = JSONObject(response.toString())
-                onUserCreated(jsonObject.getString("message"), null)
-            }
-
-        } catch (error: Throwable) {
-            onUserCreated(null, error)
+            onUserCreated(message, null)
         }
 
-        connection.disconnect()
-    }).start()
+        override fun onFailure(call: Call<ResponseBody>, error: Throwable) {
+            onUserCreated(null, error)
+        }
+    })
   }
 
   fun getTasks(onTasksReceived: (List<Task>, Throwable?) -> Unit) {
