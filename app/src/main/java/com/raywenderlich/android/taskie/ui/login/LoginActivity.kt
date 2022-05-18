@@ -42,7 +42,6 @@ import com.raywenderlich.android.taskie.App
 import com.raywenderlich.android.taskie.R
 import com.raywenderlich.android.taskie.model.request.UserDataRequest
 import com.raywenderlich.android.taskie.networking.NetworkStatusChecker
-import com.raywenderlich.android.taskie.networking.RemoteApi
 import com.raywenderlich.android.taskie.ui.main.MainActivity
 import com.raywenderlich.android.taskie.ui.register.RegisterActivity
 import com.raywenderlich.android.taskie.utils.gone
@@ -58,7 +57,7 @@ class LoginActivity : AppCompatActivity() {
     NetworkStatusChecker(getSystemService(ConnectivityManager::class.java))
   }
 
-  private val remoteApi = RemoteApi()
+  private val remoteApi = App.remoteApi
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
