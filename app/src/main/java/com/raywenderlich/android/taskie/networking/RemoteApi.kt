@@ -34,11 +34,13 @@
 
 package com.raywenderlich.android.taskie.networking
 
+import com.google.gson.Gson
 import com.raywenderlich.android.taskie.App
 import com.raywenderlich.android.taskie.model.Task
 import com.raywenderlich.android.taskie.model.UserProfile
 import com.raywenderlich.android.taskie.model.request.AddTaskRequest
 import com.raywenderlich.android.taskie.model.request.UserDataRequest
+import com.raywenderlich.android.taskie.model.response.GetTasksResponse
 import org.json.JSONObject
 import java.io.BufferedReader
 import java.io.InputStreamReader
@@ -53,6 +55,8 @@ import java.net.URL
 const val BASE_URL = "https://taskie-rw.herokuapp.com"
 
 class RemoteApi {
+
+  private val gson = Gson()
 
   fun loginUser(userDataRequest: UserDataRequest, onUserLoggedIn: (String?, Throwable?) -> Unit) {
       Thread(Runnable {
@@ -149,20 +153,37 @@ class RemoteApi {
   }
 
   fun getTasks(onTasksReceived: (List<Task>, Throwable?) -> Unit) {
-    onTasksReceived(listOf(
-        Task("id",
-            "Wash laundry",
-            "Wash the whites and colored separately!",
-            false,
-            1
-        ),
-        Task("id2",
-            "Do some work",
-            "Finish the project",
-            false,
-            3
-        )
-    ), null)
+      Thread(Runnable {
+          val connection = URL("$BASE_URL/api/note").openConnection() as HttpURLConnection
+          connection.requestMethod = "GET"
+          connection.setRequestProperty("Content-Type", "application/json")
+          connection.setRequestProperty("Accept", "application/json")
+          connection.setRequestProperty("Authorization", App.getToken())
+          connection.readTimeout = 10000
+          connection.connectTimeout = 10000
+          connection.doInput = true
+
+          try {
+              val reader = InputStreamReader(connection.inputStream)
+              reader.use { input ->
+                  val response = StringBuilder()
+                  val bufferedReader = BufferedReader(input)
+
+                  bufferedReader.useLines { lines ->
+                      lines.forEach {
+                          response.append(it.trim())
+                      }
+                  }
+
+                  val tasksResponse = gson.fromJson(response.toString(), GetTasksResponse::class.java)
+                  onTasksReceived(tasksResponse.notes, null)
+              }
+          } catch (error: Throwable) {
+              onTasksReceived(emptyList(), error)
+          }
+
+          connection.disconnect()
+      }).start()
   }
 
   fun deleteTask(onTaskDeleted: (Throwable?) -> Unit) {
