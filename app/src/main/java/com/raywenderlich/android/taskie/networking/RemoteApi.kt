@@ -69,10 +69,7 @@ class RemoteApi {
           connection.doOutput = true
           connection.doInput = true
 
-          val requestJson = JSONObject()
-          requestJson.put("email", userDataRequest.email)
-          requestJson.put("password", userDataRequest.password)
-          val body = requestJson.toString()
+          val body = gson.toJson(userDataRequest)
 
           val bytes = body.toByteArray()
 
@@ -116,11 +113,7 @@ class RemoteApi {
         connection.doOutput = true
         connection.doInput = true
 
-        val requestJson = JSONObject()
-        requestJson.put("name", userDataRequest.name)
-        requestJson.put("email", userDataRequest.email)
-        requestJson.put("password", userDataRequest.password)
-        val body = requestJson.toString()
+        val body = gson.toJson(userDataRequest)
 
         val bytes = body.toByteArray()
 
@@ -206,14 +199,11 @@ class RemoteApi {
           connection.doOutput = true
           connection.doInput = true
 
-          val requestJson = JSONObject()
-          requestJson.put("title", addTaskRequest.title)
-          requestJson.put("content", addTaskRequest.content)
-          requestJson.put("taskPriority", addTaskRequest.taskPriority)
+          val request = gson.toJson(addTaskRequest)
 
           try {
               connection.outputStream.use { outputStream ->
-                  outputStream.write(requestJson.toString().toByteArray())
+                  outputStream.write(request.toByteArray())
               }
 
               val reader = InputStreamReader(connection.inputStream)
@@ -227,15 +217,7 @@ class RemoteApi {
                       }
                   }
 
-                  val jsonObject = JSONObject(response.toString())
-
-                  val task = Task(
-                      jsonObject.getString("id"),
-                      jsonObject.getString("title"),
-                      jsonObject.getString("content"),
-                      jsonObject.getBoolean("isCompleted"),
-                      jsonObject.getInt("taskPriority")
-                  )
+                  val task = gson.fromJson(response.toString(), Task::class.java)
                   onTaskCreated(task, null)
               }
           } catch (error: Throwable) {
