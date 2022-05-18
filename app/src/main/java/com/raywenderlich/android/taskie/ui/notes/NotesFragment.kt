@@ -96,6 +96,7 @@ class NotesFragment : Fragment(), AddTaskDialogFragment.TaskAddedListener,
 
   override fun onTaskAdded(task: Task) {
     adapter.addData(task)
+    checkList(listOf(task)) //I have added this one to make noData.gone() for the first note added
   }
 
   private fun addTask() {

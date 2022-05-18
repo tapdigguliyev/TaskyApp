@@ -35,6 +35,7 @@
 package com.raywenderlich.android.taskie.ui.profile
 
 import android.content.Intent
+import android.net.ConnectivityManager
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -42,6 +43,7 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import com.raywenderlich.android.taskie.App
 import com.raywenderlich.android.taskie.R
+import com.raywenderlich.android.taskie.networking.NetworkStatusChecker
 import com.raywenderlich.android.taskie.ui.login.LoginActivity
 import kotlinx.android.synthetic.main.fragment_profile.*
 
@@ -52,6 +54,10 @@ class ProfileFragment : Fragment() {
 
   private val remoteApi = App.remoteApi
 
+  private val networkStatusChecker by lazy {
+    NetworkStatusChecker(activity?.getSystemService(ConnectivityManager::class.java))
+  }
+
   override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
       savedInstanceState: Bundle?): View? {
     return inflater.inflate(R.layout.fragment_profile, container, false)
@@ -61,11 +67,13 @@ class ProfileFragment : Fragment() {
     super.onViewCreated(view, savedInstanceState)
     initUi()
 
-    remoteApi.getUserProfile { userProfile, _ ->
-      if (userProfile != null) {
-        userEmail.text = userProfile.email
-        userName.text = getString(R.string.user_name_text, userProfile.name)
-        numberOfNotes.text = getString(R.string.number_of_notes_text, userProfile.numberOfNotes)
+    networkStatusChecker.performIfConnectedToInternet {
+      remoteApi.getUserProfile { userProfile, _ ->
+        if (userProfile != null) {
+          userEmail.text = userProfile.email
+          userName.text = getString(R.string.user_name_text, userProfile.name)
+          numberOfNotes.text = getString(R.string.number_of_notes_text, userProfile.numberOfNotes)
+        }
       }
     }
   }
