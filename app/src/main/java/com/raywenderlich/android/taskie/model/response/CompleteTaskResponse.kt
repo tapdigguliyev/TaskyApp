@@ -1,3 +1,5 @@
 package com.raywenderlich.android.taskie.model.response
 
-class CompleteTaskResponse(val message: String?)
+import com.squareup.moshi.Json
+
+class CompleteTaskResponse(@field:Json(name = "message") val message: String?)
