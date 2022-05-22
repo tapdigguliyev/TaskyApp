@@ -34,16 +34,12 @@
 
 package com.raywenderlich.android.taskie.networking
 
-import com.google.gson.Gson
 import com.raywenderlich.android.taskie.App
 import com.raywenderlich.android.taskie.model.Task
 import com.raywenderlich.android.taskie.model.UserProfile
 import com.raywenderlich.android.taskie.model.request.AddTaskRequest
 import com.raywenderlich.android.taskie.model.request.UserDataRequest
 import com.raywenderlich.android.taskie.model.response.*
-import okhttp3.MediaType
-import okhttp3.RequestBody
-import okhttp3.ResponseBody
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -56,8 +52,6 @@ import kotlin.NullPointerException
 const val BASE_URL = "https://taskie-rw.herokuapp.com"
 
 class RemoteApi(private val apiService: RemoteApiService) {
-
-  private val gson = Gson()
 
   fun loginUser(userDataRequest: UserDataRequest, onUserLoggedIn: (String?, Throwable?) -> Unit) {
       apiService.loginUser(userDataRequest).enqueue(object : Callback<LoginResponse> {
@@ -161,15 +155,10 @@ class RemoteApi(private val apiService: RemoteApiService) {
             return@getTasks
         }
 
-        apiService.getMyProfile(App.getToken()).enqueue(object : Callback<ResponseBody> {
-            override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
-                val jsonBody = response.body()?.string()
-                if (jsonBody == null) {
-                    onUserProfileReceived(null, error)
-                }
-
-                val userProfileResponse = gson.fromJson(jsonBody, UserProfileResponse::class.java)
-                if (userProfileResponse.email == null || userProfileResponse.name == null) {
+        apiService.getMyProfile(App.getToken()).enqueue(object : Callback<UserProfileResponse> {
+            override fun onResponse(call: Call<UserProfileResponse>, response: Response<UserProfileResponse>) {
+                val userProfileResponse = response.body()
+                if (userProfileResponse?.email == null || userProfileResponse.name == null) {
                     onUserProfileReceived(null, error)
                 } else {
                     onUserProfileReceived(UserProfile(
@@ -180,7 +169,7 @@ class RemoteApi(private val apiService: RemoteApiService) {
                 }
             }
 
-            override fun onFailure(call: Call<ResponseBody>, error: Throwable) {
+            override fun onFailure(call: Call<UserProfileResponse>, error: Throwable) {
                 onUserProfileReceived(null, error)
             }
         })
