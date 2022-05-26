@@ -106,24 +106,37 @@ class RemoteApi(private val apiService: RemoteApiService) {
       })
   }
 
-  fun deleteTask(onTaskDeleted: (Throwable?) -> Unit) {
-    onTaskDeleted(null)
+  fun deleteTask(taskId: String, onTaskDeleted: (Result<String>) -> Unit) {
+    apiService.deleteTask(taskId).enqueue(object : Callback<DeleteTaskResponse> {
+        override fun onResponse(call: Call<DeleteTaskResponse>, response: Response<DeleteTaskResponse>) {
+            val deleteTaskResponse = response.body()
+            if (deleteTaskResponse?.message == null) {
+                onTaskDeleted(Failure(NullPointerException("No response!")))
+            } else {
+                onTaskDeleted(Success(deleteTaskResponse.message))
+            }
+        }
+
+        override fun onFailure(call: Call<DeleteTaskResponse>, error: Throwable) {
+            onTaskDeleted(Failure(error))
+        }
+    })
   }
 
-  fun completeTask(taskId: String, onTaskCompleted: (Throwable?) -> Unit) {
+  fun completeTask(taskId: String, onTaskCompleted: (Result<String>) -> Unit) {
       apiService.completeTask(taskId).enqueue(object : Callback<CompleteTaskResponse> {
 
           override fun onResponse(call: Call<CompleteTaskResponse>, response: Response<CompleteTaskResponse>) {
               val completeTaskResponse = response.body()
               if (completeTaskResponse?.message == null) {
-                  onTaskCompleted(NullPointerException("No response!"))
+                  onTaskCompleted(Failure(NullPointerException("No response!")))
               } else {
-                  onTaskCompleted(null)
+                  onTaskCompleted(Success(completeTaskResponse.message))
               }
           }
 
           override fun onFailure(call: Call<CompleteTaskResponse>, error: Throwable) {
-              onTaskCompleted(error)
+              onTaskCompleted(Failure(error))
           }
       })
   }
