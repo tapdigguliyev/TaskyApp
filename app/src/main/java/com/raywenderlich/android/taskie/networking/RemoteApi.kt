@@ -34,7 +34,6 @@
 
 package com.raywenderlich.android.taskie.networking
 
-import com.raywenderlich.android.taskie.App
 import com.raywenderlich.android.taskie.model.*
 import com.raywenderlich.android.taskie.model.request.AddTaskRequest
 import com.raywenderlich.android.taskie.model.request.UserDataRequest
@@ -90,7 +89,7 @@ class RemoteApi(private val apiService: RemoteApiService) {
   }
 
   fun getTasks(onTasksReceived: (Result<List<Task>>) -> Unit) {
-      apiService.getNotes(App.getToken()).enqueue(object : Callback<GetTasksResponse> {
+      apiService.getNotes().enqueue(object : Callback<GetTasksResponse> {
 
           override fun onResponse(call: Call<GetTasksResponse>, response: Response<GetTasksResponse>) {
               val data = response.body()
@@ -112,7 +111,7 @@ class RemoteApi(private val apiService: RemoteApiService) {
   }
 
   fun completeTask(taskId: String, onTaskCompleted: (Throwable?) -> Unit) {
-      apiService.completeTask(App.getToken(), taskId).enqueue(object : Callback<CompleteTaskResponse> {
+      apiService.completeTask(taskId).enqueue(object : Callback<CompleteTaskResponse> {
 
           override fun onResponse(call: Call<CompleteTaskResponse>, response: Response<CompleteTaskResponse>) {
               val completeTaskResponse = response.body()
@@ -130,7 +129,7 @@ class RemoteApi(private val apiService: RemoteApiService) {
   }
 
   fun addTask(addTaskRequest: AddTaskRequest, onTaskCreated: (Result<Task>) -> Unit) {
-      apiService.addTask(App.getToken(), addTaskRequest).enqueue(object : Callback<Task> {
+      apiService.addTask(addTaskRequest).enqueue(object : Callback<Task> {
 
           override fun onResponse(call: Call<Task>, response: Response<Task>) {
               val data = response.body()
@@ -155,7 +154,7 @@ class RemoteApi(private val apiService: RemoteApiService) {
         }
         val tasks = result as Success
 
-        apiService.getMyProfile(App.getToken()).enqueue(object : Callback<UserProfileResponse> {
+        apiService.getMyProfile().enqueue(object : Callback<UserProfileResponse> {
             override fun onResponse(call: Call<UserProfileResponse>, response: Response<UserProfileResponse>) {
                 val userProfileResponse = response.body()
                 if (userProfileResponse?.email == null || userProfileResponse.name == null) {
