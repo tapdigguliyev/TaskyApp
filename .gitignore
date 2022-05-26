@@ -76,3 +76,8 @@ fastlane/readme.md
 .idea/copyright
 .idea/codeStyles
 .idea/fileTemplates
+
+caches/
+daemon/
+native/
+wrapper/
