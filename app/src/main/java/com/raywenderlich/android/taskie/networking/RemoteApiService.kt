@@ -28,5 +28,5 @@ interface RemoteApiService {
     fun addTask(@Body request: AddTaskRequest): Call<Task>
 
     @DELETE("api/note")
-    fun deleteTask(@Query("id") noteId: String): Call<DeleteTaskResponse>
+    suspend fun deleteTask(@Query("id") noteId: String): DeleteTaskResponse
 }

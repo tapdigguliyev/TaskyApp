@@ -4,4 +4,4 @@ import kotlinx.serialization.Serializable
 
 
 @Serializable
-class DeleteTaskResponse(val message: String?)
+class DeleteTaskResponse(val message: String)

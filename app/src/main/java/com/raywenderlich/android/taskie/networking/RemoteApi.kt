@@ -108,18 +108,11 @@ class RemoteApi(private val apiService: RemoteApiService) {
       })
   }
 
-  suspend fun deleteTask(taskId: String): Result<String> = withContext(Dispatchers.IO) {
-    try {
-        val data = apiService.deleteTask(taskId).execute().body()
-
-        if (data?.message == null) {
-            Failure(NullPointerException("No response!"))
-        } else {
-            Success(data.message)
-        }
-    } catch (error: Throwable) {
-        Failure(error)
-    }
+  suspend fun deleteTask(taskId: String): Result<String> = try {
+      val data = apiService.deleteTask(taskId)
+      Success(data.message)
+  } catch (error: Throwable) {
+      Failure(error)
   }
 
   fun completeTask(taskId: String, onTaskCompleted: (Result<String>) -> Unit) {
